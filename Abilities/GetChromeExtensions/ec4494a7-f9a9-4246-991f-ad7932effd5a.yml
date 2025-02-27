@@ -1,0 +1,40 @@
+- tactic: discovery
+  technique_name: Browser Extensions
+  technique_id: T1176
+  name: '[custom] Get Chrome Extensions'
+  description: 'Description: This PowerShell one-liner extracts the names of all installed
+    Chrome extensions for the current user by reading the manifest.json files in the
+    Chrome extensions directory and resolving any localized names using the _locales
+    directory.'
+  executors:
+  - name: psh
+    platform: windows
+    command: $extensionsPath = "C:\Users\$((Get-WmiObject -Class Win32_ComputerSystem).UserName.Split('\')[1])\AppData\Local\Google\Chrome\User
+      Data\Default\Extensions"; $extensions = Get-ChildItem -Path $extensionsPath;
+      $extensions | ForEach-Object { $manifestPath = "$($_.FullName)\$($_.GetDirectories()[0].Name)\manifest.json";
+      if (Test-Path $manifestPath) { $manifest = Get-Content $manifestPath | ConvertFrom-Json;
+      $name = $manifest.name; if ($name -like "__MSG_*") { $localePath = "$($_.FullName)\$($_.GetDirectories()[0].Name)\_locales\en\messages.json";
+      if (Test-Path $localePath) { $messages = Get-Content $localePath | ConvertFrom-Json;
+      $key = $name -replace "__MSG_", "" -replace "__", ""; $name = $messages.$key.message
+      } }; [PSCustomObject]@{ ID = $_.Name; Name = $name } } } | Format-Table -AutoSize
+    code: null
+    language: null
+    build_target: null
+    payloads: []
+    uploads: []
+    timeout: 60
+    parsers: []
+    cleanup: []
+    variations: []
+    additional_info: {}
+  requirements: []
+  privilege: ''
+  repeatable: false
+  buckets:
+  - discovery
+  additional_info: {}
+  access: {}
+  singleton: false
+  plugin: ''
+  delete_payload: true
+  id: ec4494a7-f9a9-4246-991f-ad7932effd5a
